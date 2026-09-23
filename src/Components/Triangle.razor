@@ -1,0 +1,39 @@
+@namespace LearnSilkNET.src.Components
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@using Microsoft.JSInterop
+
+<main>
+    <h1>Hello Triangle</h1>
+    <canvas @ref="canvas" width="800" height="600" aria-label="Triângulo renderizado com WebGL"></canvas>
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <p class="error" role="alert">@error</p>
+    }
+</main>
+
+@code {
+    private ElementReference canvas;
+    private IJSObjectReference? module;
+    private string? error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        module = await JS.InvokeAsync<IJSObjectReference>("import", "./triangle.js");
+        error = await module.InvokeAsync<string?>("draw", canvas);
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+}

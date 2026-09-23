@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publicar no itch.io"
+  short_description: "Publica projetos HTML5 no itch.io"
+  default_prompt: "Use $itch-html5-publishing para preparar e publicar minha build web no itch.io."

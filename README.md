@@ -30,6 +30,35 @@ O arquivo JavaScript é necessário porque WebGL é uma API nativa do navegador.
 
 O itch.io entrega o conteúdo por HTTP, que é necessário para o runtime WebAssembly carregar corretamente.
 
+### Publicação pela interface web
+
+Na tela **Edit project**, escolha `HTML` como tipo do projeto, envie o ZIP e selecione **Embed in page**. Use o tamanho `800 × 600`, marque **Mobile friendly**, **Automatically start on page load** e **Fullscreen button**. Salve como rascunho para testar; depois altere a visibilidade para **Public**.
+
+### Publicação pelo Butler
+
+O [Butler](https://itch.io/docs/butler/) é a ferramenta oficial de linha de comando do itch.io. Ela é útil para atualizar a build sem abrir o seletor de arquivos no navegador e envia somente os arquivos que mudaram em versões futuras.
+
+1. Baixe o Butler para seu sistema seguindo a [documentação oficial](https://itch.io/docs/butler/installing.html).
+2. Faça login uma vez:
+
+   ```bash
+   butler login
+   ```
+
+3. Gere a versão web:
+
+   ```bash
+   dotnet publish -c Release -o publish
+   ```
+
+4. Envie a pasta que contém `index.html` para um canal HTML5:
+
+   ```bash
+   butler push publish/wwwroot lucasdoreac/trans-triangle:html5 --userversion 1.0.0
+   ```
+
+O formato é `butler push <pasta-da-build> <usuário>/<projeto>:<canal>`. Para uma atualização futura, aumente a versão, por exemplo para `1.0.1`. O Butler gera patches e reduz o tamanho de uploads repetidos.
+
 ## Arquivos principais
 
 - `LearnSilkNET.csproj`: configura um projeto Blazor WebAssembly para .NET 10.

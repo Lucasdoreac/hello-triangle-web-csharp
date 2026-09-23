@@ -16,7 +16,7 @@ O `main.cpp` de referência cria uma janela GLFW, prepara shaders, envia os vér
 | OpenGL/GLAD | [wwwroot/triangle.js](wwwroot/triangle.js), uma ponte pequena para a API WebGL do navegador. |
 | Vertex e fragment shader | Os mesmos shaders, adaptados de OpenGL 3.3 para WebGL 2 (`#version 300 es`). |
 
-`Triangle.razor` cria o canvas e, depois que a tela é renderizada, chama `draw` por interoperabilidade JavaScript. O arquivo `triangle.js` cria os shaders, monta o VBO/VAO com os três vértices, limpa o canvas com a mesma cor do exemplo e chama `drawArrays` para renderizar o triângulo laranja.
+`Triangle.razor` cria o canvas e, depois que a tela é renderizada, chama `draw` por interoperabilidade JavaScript. O arquivo `triangle.js` cria os shaders, monta o VBO/VAO com os três vértices, limpa o canvas e chama `drawArrays` para renderizar o triângulo nas cores azul-claro, rosa e branco.
 
 O arquivo JavaScript é necessário porque WebGL é uma API nativa do navegador. A aplicação, a tela e a inicialização continuam em C#; o JavaScript apenas acessa a API gráfica exposta pelo browser.
 
@@ -38,6 +38,8 @@ Na tela **Edit project**, escolha `HTML` como tipo do projeto, envie o ZIP e sel
 
 O [Butler](https://itch.io/docs/butler/) é a ferramenta oficial de linha de comando do itch.io. Ela é útil para atualizar a build sem abrir o seletor de arquivos no navegador e envia somente os arquivos que mudaram em versões futuras.
 
+Nesta publicação, o Butler enviou a pasta `publish/wwwroot` para o canal `html5`. A interface do itch.io continuou sendo usada para configurar o título, a descrição, o tamanho do frame e a visibilidade pública; o Butler cuidou somente do upload da build. Essa divisão evita depender do seletor de arquivos do navegador.
+
 1. Baixe o Butler para seu sistema seguindo a [documentação oficial](https://itch.io/docs/butler/installing.html).
 2. Faça login uma vez:
 
@@ -58,6 +60,10 @@ O [Butler](https://itch.io/docs/butler/) é a ferramenta oficial de linha de com
    ```
 
 O formato é `butler push <pasta-da-build> <usuário>/<projeto>:<canal>`. Para uma atualização futura, aumente a versão, por exemplo para `1.0.1`. O Butler gera patches e reduz o tamanho de uploads repetidos.
+
+## Versão publicada
+
+O exemplo pode ser aberto em [lucasdoreac.itch.io/trans-triangle](https://lucasdoreac.itch.io/trans-triangle).
 
 ## Arquivos principais
 

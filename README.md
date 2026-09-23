@@ -1,6 +1,8 @@
-# Hello Triangle — C# WebAssembly
+# Trans Triangle — C# WebAssembly
 
 Este é o exemplo `2.1.hello_triangle` convertido para rodar no navegador. A aplicação é escrita e compilada em C#; o navegador executa o resultado como WebAssembly. O desenho usa WebGL 2, pois é a API gráfica que os navegadores oferecem.
+
+A cena usa azul-claro, rosa e branco da bandeira trans nos vértices. O shader de vértice aplica rotação e pulsação contínuas para deixar o exemplo visualmente vivo sem esconder os conceitos de VBO, VAO, shaders e `drawArrays`.
 
 ## Por que esta estrutura
 
@@ -17,6 +19,16 @@ O `main.cpp` de referência cria uma janela GLFW, prepara shaders, envia os vér
 `Triangle.razor` cria o canvas e, depois que a tela é renderizada, chama `draw` por interoperabilidade JavaScript. O arquivo `triangle.js` cria os shaders, monta o VBO/VAO com os três vértices, limpa o canvas com a mesma cor do exemplo e chama `drawArrays` para renderizar o triângulo laranja.
 
 O arquivo JavaScript é necessário porque WebGL é uma API nativa do navegador. A aplicação, a tela e a inicialização continuam em C#; o JavaScript apenas acessa a API gráfica exposta pelo browser.
+
+## Como publicar no itch.io
+
+1. Rode `dotnet publish -c Release -o publish`.
+2. Entre na pasta `publish/wwwroot`.
+3. Compacte **os arquivos dentro dessa pasta**, incluindo `_framework`, em um ZIP.
+4. Crie um projeto do tipo **HTML** no itch.io e envie esse ZIP como build.
+5. Na página de edição do itch.io, marque **This file will be played in the browser** e deixe o projeto público.
+
+O itch.io entrega o conteúdo por HTTP, que é necessário para o runtime WebAssembly carregar corretamente.
 
 ## Arquivos principais
 

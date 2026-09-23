@@ -4,8 +4,10 @@
 @using Microsoft.JSInterop
 
 <main>
-    <h1>Hello Triangle</h1>
+    <p class="eyebrow">C# · Blazor WebAssembly · WebGL 2</p>
+    <h1>Trans Triangle</h1>
     <canvas @ref="canvas" width="800" height="600" aria-label="Triângulo renderizado com WebGL"></canvas>
+    <p class="hint">Uma animação em WebGL com as cores da bandeira trans.</p>
     @if (!string.IsNullOrWhiteSpace(error))
     {
         <p class="error" role="alert">@error</p>

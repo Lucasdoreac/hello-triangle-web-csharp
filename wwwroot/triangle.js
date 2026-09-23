@@ -6,15 +6,24 @@ export function draw(canvas) {
 
   const vertexSource = `#version 300 es
     layout(location = 0) in vec3 aPos;
+    layout(location = 1) in vec3 aColor;
+    uniform float uTime;
+    out vec3 vertexColor;
+
     void main() {
-      gl_Position = vec4(aPos, 1.0);
+      float angle = uTime * 0.45;
+      mat2 rotation = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+      float pulse = 0.88 + sin(uTime * 2.0) * 0.06;
+      gl_Position = vec4(rotation * aPos.xy * pulse, aPos.z, 1.0);
+      vertexColor = aColor;
     }`;
 
   const fragmentSource = `#version 300 es
     precision mediump float;
+    in vec3 vertexColor;
     out vec4 FragColor;
     void main() {
-      FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+      FragColor = vec4(vertexColor, 1.0);
     }`;
 
   function compile(type, source) {
@@ -40,9 +49,10 @@ export function draw(canvas) {
     }
 
     const vertices = new Float32Array([
-      -0.5, -0.5, 0.0,
-       0.5, -0.5, 0.0,
-       0.0,  0.5, 0.0
+      // posição             // cor: azul, rosa e branco da bandeira trans
+      -0.5, -0.5, 0.0,        0.357, 0.808, 0.980,
+       0.5, -0.5, 0.0,        0.961, 0.663, 0.722,
+       0.0,  0.5, 0.0,        1.000, 1.000, 1.000
     ]);
 
     const vao = gl.createVertexArray();
@@ -50,15 +60,26 @@ export function draw(canvas) {
     gl.bindVertexArray(vao);
     gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
+    const stride = 6 * Float32Array.BYTES_PER_ELEMENT;
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, stride, 0);
     gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, stride, 3 * Float32Array.BYTES_PER_ELEMENT);
+    gl.enableVertexAttribArray(1);
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0.2, 0.3, 0.3, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(program);
-    gl.bindVertexArray(vao);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    const time = gl.getUniformLocation(program, 'uTime');
+
+    function render(milliseconds) {
+      gl.clearColor(0.055, 0.075, 0.12, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.useProgram(program);
+      gl.uniform1f(time, milliseconds * 0.001);
+      gl.bindVertexArray(vao);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
     return null;
   } catch (exception) {
     return `Não foi possível renderizar o triângulo: ${exception.message}`;

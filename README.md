@@ -20,46 +20,102 @@ O `main.cpp` de referência cria uma janela GLFW, prepara shaders, envia os vér
 
 O arquivo JavaScript é necessário porque WebGL é uma API nativa do navegador. A aplicação, a tela e a inicialização continuam em C#; o JavaScript apenas acessa a API gráfica exposta pelo browser.
 
-## Como publicar no itch.io
+## Guia completo: publicar projetos web no itch.io
 
-1. Rode `dotnet publish -c Release -o publish`.
-2. Entre na pasta `publish/wwwroot`.
-3. Compacte **os arquivos dentro dessa pasta**, incluindo `_framework`, em um ZIP.
-4. Crie um projeto do tipo **HTML** no itch.io e envie esse ZIP como build.
-5. Na página de edição do itch.io, marque **This file will be played in the browser** e deixe o projeto público.
+Este fluxo serve para qualquer site, jogo ou experiência interativa que rode somente no navegador com HTML, CSS, JavaScript ou WebAssembly. O itch.io espera uma página inicial chamada `index.html`; arquivos adicionais precisam estar no mesmo pacote e ser referenciados por caminhos relativos.
 
-O itch.io entrega o conteúdo por HTTP, que é necessário para o runtime WebAssembly carregar corretamente.
+### Antes de enviar
+
+1. Gere uma build de produção. Cada ferramenta tem seu comando: `dotnet publish`, `npm run build`, `vite build`, `unity -buildTarget WebGL`, entre outros.
+2. Encontre a pasta final da build. Ela deve conter `index.html` diretamente, além de todos os arquivos de JavaScript, CSS, imagens, áudio, fontes e arquivos `.wasm` necessários.
+3. Abra a build em um servidor HTTP local e teste. Não abra o `index.html` pelo explorador de arquivos: vários runtimes WebAssembly exigem HTTP.
+4. Use caminhos relativos. Um endereço como `/assets/logo.png` procura um arquivo na raiz do domínio e falha no CDN do itch.io. Prefira `assets/logo.png` ou `./assets/logo.png`. Neste projeto, por exemplo, o `base href` é `./` para que os arquivos do Blazor carreguem dentro do iframe do itch.io.
+
+O itch.io aceita um arquivo HTML único ou um ZIP. Para projetos com mais de um arquivo, use ZIP. Dentro dele, `index.html` deve ficar na raiz do ZIP, e não dentro de uma pasta intermediária.
+
+```text
+correto.zip
+├── index.html
+├── assets/
+└── _framework/
+
+incorreto.zip
+└── minha-build/
+    ├── index.html
+    └── assets/
+```
+
+Em macOS e Linux, entre na pasta da build antes de compactar:
+
+```bash
+cd pasta-da-build
+zip -r ../meu-projeto-itch.zip .
+```
+
+No Windows, abra a pasta da build, selecione seu conteúdo e use **Enviar para → Pasta compactada**. Confirme abrindo o ZIP: o primeiro nível deve mostrar `index.html`.
+
+O serviço limita um ZIP HTML5 a 1.000 arquivos, 500 MB extraídos e 200 MB por arquivo. Evite também nomes de arquivos com mais de 240 caracteres. Consulte a [documentação de HTML5 do itch.io](https://itch.io/docs/creators/html5) se a build ultrapassar esses limites.
 
 ### Publicação pela interface web
 
-Na tela **Edit project**, escolha `HTML` como tipo do projeto, envie o ZIP e selecione **Embed in page**. Use o tamanho `800 × 600`, marque **Mobile friendly**, **Automatically start on page load** e **Fullscreen button**. Salve como rascunho para testar; depois altere a visibilidade para **Public**.
+1. Crie uma página em [itch.io/game/new](https://itch.io/game/new), ou abra **Edit project** em uma página existente.
+2. Escolha **HTML** como tipo do projeto e preencha título, URL e descrição.
+3. Envie o ZIP da build como arquivo de upload.
+4. Marque **This file will be played in the browser** e escolha **Embed in page**.
+5. Defina largura e altura iniciais do frame. `800 × 600` é um bom ponto de partida; prefira um layout responsivo na aplicação.
+6. Se a experiência funcionar em celular, marque **Mobile friendly**. Ative **Automatically start on page load** e **Fullscreen button** quando fizer sentido.
+7. Salve como rascunho, abra a página pública de teste e confirme que todos os recursos carregam. O primeiro processamento do ZIP pode levar alguns instantes.
+8. Quando estiver correto, altere a visibilidade para **Public** e salve.
 
 ### Publicação pelo Butler
 
-O [Butler](https://itch.io/docs/butler/) é a ferramenta oficial de linha de comando do itch.io. Ela é útil para atualizar a build sem abrir o seletor de arquivos no navegador e envia somente os arquivos que mudaram em versões futuras.
+O [Butler](https://itch.io/docs/butler/) é a ferramenta oficial de linha de comando do itch.io. Ele envia uma pasta de build diretamente, não exige o seletor de arquivos do navegador e transfere apenas as diferenças nas atualizações seguintes. O Butler não cria a página do projeto: crie-a uma vez pela interface web antes do primeiro envio.
 
-Nesta publicação, o Butler enviou a pasta `publish/wwwroot` para o canal `html5`. A interface do itch.io continuou sendo usada para configurar o título, a descrição, o tamanho do frame e a visibilidade pública; o Butler cuidou somente do upload da build. Essa divisão evita depender do seletor de arquivos do navegador.
+Nesta publicação, a interface do itch.io foi usada para configurar título, descrição, frame e visibilidade; o Butler enviou a pasta `publish/wwwroot` para o canal `html5`.
 
-1. Baixe o Butler para seu sistema seguindo a [documentação oficial](https://itch.io/docs/butler/installing.html).
-2. Faça login uma vez:
+1. Instale o Butler usando a [documentação oficial](https://itch.io/docs/butler/installing.html) e confirme a instalação:
+
+   ```bash
+   butler version
+   ```
+
+2. Autentique uma vez. O comando abre o navegador e guarda a credencial localmente:
 
    ```bash
    butler login
    ```
 
-3. Gere a versão web:
+3. Gere a build e confirme que a pasta indicada contém `index.html`:
 
    ```bash
    dotnet publish -c Release -o publish
    ```
 
-4. Envie a pasta que contém `index.html` para um canal HTML5:
+4. Envie a pasta da build para o canal escolhido. Substitua os valores entre `< >`:
 
    ```bash
-   butler push publish/wwwroot lucasdoreac/trans-triangle:html5 --userversion 1.0.0
+   butler push <pasta-da-build> <usuario>/<slug-do-projeto>:html5 --userversion 1.0.0
    ```
 
-O formato é `butler push <pasta-da-build> <usuário>/<projeto>:<canal>`. Para uma atualização futura, aumente a versão, por exemplo para `1.0.1`. O Butler gera patches e reduz o tamanho de uploads repetidos.
+   Exemplo deste projeto:
+
+   ```bash
+   butler push publish/wwwroot lucasdoreac/trans-triangle:html5 --userversion 1.0.1
+   ```
+
+5. Para publicar uma nova versão, gere outra build e repita o comando com uma versão maior, por exemplo `1.0.2`. Abra a página do itch.io para verificar a atualização.
+
+Se o caminho tiver espaços, coloque-o entre aspas. Para mais de uma plataforma, envie cada pasta a um canal claro, como `:windows`, `:linux`, `:osx` ou `:html5`.
+
+### Diagnóstico rápido
+
+| Sintoma | Causa provável | Correção |
+| --- | --- | --- |
+| Página fica em branco ou só mostra carregamento | `index.html` não está na raiz do ZIP, ou faltam arquivos da build | Confira o conteúdo do ZIP e envie novamente. |
+| CSS, imagens, JavaScript ou WebAssembly retornam 404/403 | Caminhos absolutos começando com `/` | Troque por caminhos relativos e gere uma nova build. |
+| O arquivo abre localmente, mas falha ao clicar duas vezes | O navegador bloqueia requisições de `file://` | Teste com um servidor HTTP local. |
+| Butler não encontra a build | A pasta passada não contém `index.html` ou possui espaços sem aspas | Revise o caminho e use aspas quando necessário. |
+| O upload pelo Butler falha antes de começar | Não há login ou ainda não existe página no itch.io | Rode `butler login` e crie a página pela interface. |
 
 ## Versão publicada
 
